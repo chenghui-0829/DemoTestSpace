@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">RecycleView</string>
+    <string name="text1">RcycleView实现ListView</string>
+    <string name="text2">RcycleView实现GridView</string>
+</resources>
