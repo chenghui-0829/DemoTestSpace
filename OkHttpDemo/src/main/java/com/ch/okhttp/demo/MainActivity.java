@@ -5,7 +5,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.TextView;
 
+import com.ch.my.okhttp.IResponseHandler;
+import com.ch.my.okhttp.MyOkHttp;
+import com.ch.my.okhttp.RawResponseHandler;
+
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
@@ -28,42 +33,59 @@ public class MainActivity extends AppCompatActivity {
 
         textView = (TextView) findViewById(R.id.main_text);
 
-//        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
-//        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-        LoggingInterceptor interceptor = new LoggingInterceptor();
+        MyOkHttp.get().get(this, url, null, new RawResponseHandler() {
 
-        OkHttpClient client = new OkHttpClient.Builder()
-                .addInterceptor(interceptor)
-                .connectTimeout(10, TimeUnit.SECONDS)
-                .writeTimeout(10, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .build();
-        Request request = new Request.Builder().url(url).build();
-        Call call = client.newCall(request);
-        call.enqueue(new Callback() {
+
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(int statusCode, String error_msg) {
+
+                textView.setText(error_msg);
 
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful()) {
-                    final String result = response.body().string();
-                    System.out.println("======success======" + result);
+            public void onSuccess(int statusCode, String response) {
 
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            textView.setText(result);
-                        }
-
-                    });
-
-
-                }
             }
         });
+
+
+//        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
+//        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+//        LoggingInterceptor interceptor = new LoggingInterceptor();
+//
+//        OkHttpClient client = new OkHttpClient.Builder()
+//                .addInterceptor(interceptor)
+//                .connectTimeout(10, TimeUnit.SECONDS)
+//                .writeTimeout(10, TimeUnit.SECONDS)
+//                .readTimeout(30, TimeUnit.SECONDS)
+//                .build();
+//        Request request = new Request.Builder().url(url).build();
+//        Call call = client.newCall(request);
+//        call.enqueue(new Callback() {
+//            @Override
+//            public void onFailure(Call call, IOException e) {
+//
+//            }
+//
+//            @Override
+//            public void onResponse(Call call, Response response) throws IOException {
+//                if (response.isSuccessful()) {
+//                    final String result = response.body().string();
+//                    System.out.println("======success======" + result);
+//
+//                    runOnUiThread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            textView.setText(result);
+//                        }
+//
+//                    });
+//
+//
+//                }
+//            }
+//        });
 
     }
 
