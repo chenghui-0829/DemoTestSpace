@@ -28,6 +28,8 @@ public class MainActivity extends AppCompatActivity {
 
         textView = (TextView) findViewById(R.id.main_text);
 
+//        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
+//        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
         LoggingInterceptor interceptor = new LoggingInterceptor();
 
         OkHttpClient client = new OkHttpClient.Builder()
@@ -65,15 +67,14 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    class LoggingInterceptor implements Interceptor {
+    private class LoggingInterceptor implements Interceptor {
+
         @Override
         public Response intercept(Interceptor.Chain chain) throws IOException {
             Request request = chain.request();
-            System.out.println("intercept:==========>" + request.url());
-            Log.e("requestUrl", "intercept:" + request.url());
+            Log.e("requestUrl==========>", "intercept:" + request.url() + "---->" + chain.connection() + "---->" + request.headers());
             Response response = chain.proceed(request);
-            Log.e("responseUrl", "intercept:" + response.request().url());
-            System.out.println("responseUrl==========>" + response.request().url());
+            Log.e("responseUrl==========>", "intercept:" + response.request().url());
             return response;
         }
     }

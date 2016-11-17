@@ -1,1 +1,1 @@
-include ':MvpDemo', ':OkHttpDemo'
+include ':MvpDemo', ':OkHttpDemo', ':Retrofit+Rxjava', ':RecycleView'

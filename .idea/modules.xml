@@ -5,6 +5,8 @@
       <module fileurl="file://$PROJECT_DIR$/DemoTestSpace.iml" filepath="$PROJECT_DIR$/DemoTestSpace.iml" />
       <module fileurl="file://$PROJECT_DIR$/MvpDemo/MvpDemo.iml" filepath="$PROJECT_DIR$/MvpDemo/MvpDemo.iml" />
       <module fileurl="file://$PROJECT_DIR$/OkHttpDemo/OkHttpDemo.iml" filepath="$PROJECT_DIR$/OkHttpDemo/OkHttpDemo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/RecycleView/RecycleView.iml" filepath="$PROJECT_DIR$/RecycleView/RecycleView.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Retrofit+Rxjava/Retrofit+Rxjava.iml" filepath="$PROJECT_DIR$/Retrofit+Rxjava/Retrofit+Rxjava.iml" />
     </modules>
   </component>
 </project>
