@@ -1,14 +1,19 @@
 package com.ch.rxjava.demo;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
+import okhttp3.Interceptor;
 import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -40,9 +45,17 @@ public class RetrofitActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_retrofit);
 
+        OkHttpClient client = new OkHttpClient.Builder()
+                .addInterceptor(new LoggingInterceptor())
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .build();
+
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://120.24.220.249:13000/api/p2p/")
+                .baseUrl("http://www.shwdztc.com/api/p2p/")
                 .addConverterFactory(ScalarsConverterFactory.create())
+                .client(client)
                 .build();
 
         Map<String, String> params = new HashMap<>();
@@ -63,14 +76,32 @@ public class RetrofitActivity extends AppCompatActivity {
         });
     }
 
+
+    private class LoggingInterceptor implements Interceptor {
+        @Override
+        public okhttp3.Response intercept(Chain chain) throws IOException {
+
+            Request request = chain.request();
+
+            Log.e("requestUrl==========>", "intercept:" + request.url() + "---->" + chain.connection() + "---->" + request.headers());
+
+
+            okhttp3.Response response = chain.proceed(request);
+
+
+            System.out.println("------info-------->" + response.request().url() + "------>" + response.headers());
+            return response;
+        }
+    }
+
+
     private interface ApiService {
 
+        /**
+         * 这里主要用注解@get @post 设置请求方式，后面“GetRecentnewRecord”是方法Url
+         */
         @GET("GetRecentnewRecord")
         Call<String> getData(@Query("tokenId") String id);
-
-        /**
-         * 这里主要用注解@get @post 设置请求方式，后面“GetRecentnewRecord”是方法Url, @Query("tokenId")来设定body的parameters.
-         */
 
         /**
          * 如果想用表单 @FieldMap
