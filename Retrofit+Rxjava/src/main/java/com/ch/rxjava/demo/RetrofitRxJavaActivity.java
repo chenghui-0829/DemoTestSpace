@@ -1,8 +1,19 @@
 package com.ch.rxjava.demo;
 
-import android.support.v7.app.AppCompatActivity;
+import android.annotation.TargetApi;
+import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.ImageView;
+import android.widget.Toast;
+
+import com.ch.rxjava.base.ActivityLifeCycleEvent;
+import com.ch.rxjava.base.BaseActivity;
+import com.ch.rxjava.util.*;
+import com.ch.rxjava.util.HttpRequestUtil;
+import com.ch.rxjava.util.ProgressSubscriber;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -13,7 +24,6 @@ import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.logging.HttpLoggingInterceptor;
-import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
@@ -21,6 +31,7 @@ import retrofit2.http.GET;
 import retrofit2.http.Path;
 import retrofit2.http.QueryMap;
 import rx.Observable;
+import rx.Observer;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
@@ -28,90 +39,36 @@ import rx.schedulers.Schedulers;
 /**
  * http://www.2cto.com/kf/201605/510999.html
  */
-public class RetrofitRxJavaActivity extends AppCompatActivity {
+public class RetrofitRxJavaActivity extends BaseActivity {
+
+
+    private ImageView imageView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_retrofit_rx_java);
+        sendHttpRequest();
+    }
 
-        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
-        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-
-        OkHttpClient client = new OkHttpClient.Builder()
-                .addInterceptor(interceptor)
-                .connectTimeout(10, TimeUnit.SECONDS)
-                .writeTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .build();
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://www.shwdztc.com/api/p2p/")
-                .addConverterFactory(ScalarsConverterFactory.create())
-                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
-                .client(client)
-                .build();
+    private void sendHttpRequest() {
 
         Map<String, String> params = new HashMap<>();
         params.put("tokenId", "ce301015-303b-432c-9fbe-ff12167d01c1");
 
-        ApiService service = retrofit.create(ApiService.class);
-        service.queryMap("GetRecentnewRecord", params)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Subscriber<String>() {
-                    @Override
-                    public void onCompleted() {
+        HttpClientUtil.getInstance().sendHttpRequset("get", "GetRecentnewRecord", params, new ProgressSubscriber(this) {
+            @Override
+            protected void _onNext(Object o) {
+                System.out.println("请求成功======>" + o.toString());
+            }
 
-
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-
-                        Log.e("----erro----", e.getMessage());
-
-                    }
-
-                    @Override
-                    public void onNext(String s) {
-
-                        Log.e("-----success---", s);
-
-                    }
-                });
+            @Override
+            protected void _onError(String message) {
+                System.out.println("失败======>" + message);
+            }
+        }, ActivityLifeCycleEvent.DESTROY, lifecycleSubject);
 
     }
 
-
-    private interface ApiService {
-
-
-        /**
-         * 如果直接多参数 @QueryMap
-         */
-        @GET("{url}")
-        Observable<String> queryMap(@Path("url") String url, @QueryMap Map<String, String> maps);
-
-
-    }
-
-
-    private class LoggingInterceptor implements Interceptor {
-        @Override
-        public okhttp3.Response intercept(Chain chain) throws IOException {
-
-            Request request = chain.request();
-
-            Log.e("requestUrl==========>", "intercept:" + request.url() + "---->" + chain.connection() + "---->" + request.headers());
-
-
-            okhttp3.Response response = chain.proceed(request);
-
-
-            System.out.println("------info-------->" + response.request().url() + "------>" + response.headers());
-            return response;
-        }
-    }
 
 }
