@@ -1,6 +1,9 @@
 package com.ch.rxjava.util;
 
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.util.Log;
 
 import com.ch.rxjava.base.ActivityLifeCycleEvent;
@@ -10,10 +13,13 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import okhttp3.Cache;
+import okhttp3.CacheControl;
 import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.Response;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
@@ -30,6 +36,8 @@ public class HttpClientUtil {
 
     private HttpRequestUtil request;
     private String baseUrl = "http://www.shwdztc.com/api/p2p/";
+    private static Context mContext;
+
 
     /**
      * 在访问HttpMethods时创建单例
@@ -41,7 +49,10 @@ public class HttpClientUtil {
     /**
      * 获取单例
      */
-    public static HttpClientUtil getInstance() {
+    public static HttpClientUtil getInstance(Context context) {
+
+        mContext = context;
+
         return SingletonHolder.INSTANCE;
     }
 
@@ -53,8 +64,14 @@ public class HttpClientUtil {
 //       HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
 //       interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
+        //创建Cache
+        Cache cache = new Cache(mContext.getCacheDir(), 10 * 1024 * 1024);
+
         OkHttpClient client = new OkHttpClient.Builder()
                 .addInterceptor(new LoggingInterceptor())
+                .addNetworkInterceptor(new CacheInterceptor())
+                .addInterceptor(new CacheInterceptor())
+                .cache(cache)
                 .connectTimeout(10, TimeUnit.SECONDS)
                 .writeTimeout(30, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS)
@@ -118,5 +135,56 @@ public class HttpClientUtil {
                 .subscribe(subscriber);
     }
 
+    /**
+     * 缓存
+     */
+    private class CacheInterceptor implements Interceptor {
+
+        @Override
+        public Response intercept(Chain chain) throws IOException {
+            Request request = chain.request();
+            if (!IsNet(mContext)) {
+                //无网络下强制使用缓存，无论缓存是否过期,此时该请求实际上不会被发送出去。
+                request = request.newBuilder().cacheControl(CacheControl.FORCE_CACHE)
+                        .build();
+            }
+
+            Response response = chain.proceed(request);
+            if (!IsNet(mContext)) {//有网络情况下，根据请求接口的设置，配置缓存。
+                //这样在下次请求时，根据缓存决定是否真正发出请求。
+                String cacheControl = request.cacheControl().toString();
+                //当然如果你想在有网络的情况下都直接走网络，那么只需要
+                //将其超时时间这是为0即可:String cacheControl="Cache-Control:public,max-age=0"
+                return response.newBuilder().header("Cache-Control", cacheControl)
+                        .removeHeader("Pragma")
+                        .build();
+            } else {//无网络
+                return response.newBuilder().header("Cache-Control", "public,only-if-cached,max-stale=360000")
+                        .removeHeader("Pragma")
+                        .build();
+            }
+
+        }
+    }
+
+
+    /***
+     * 判断网络是否连接
+     */
+    public static boolean IsNet(Context context) {
+        ConnectivityManager connectivity = (ConnectivityManager) context
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivity != null) {
+            NetworkInfo info = connectivity.getActiveNetworkInfo();
+            if (info != null && info.isConnected()) {
+                // 当前网络是连接的
+                if (info.getState() == NetworkInfo.State.CONNECTED) {
+                    // 当前所连接的网络可用
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
 }

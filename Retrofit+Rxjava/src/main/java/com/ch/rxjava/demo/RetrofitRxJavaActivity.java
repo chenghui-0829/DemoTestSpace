@@ -1,6 +1,7 @@
 package com.ch.rxjava.demo;
 
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -42,6 +43,7 @@ import rx.schedulers.Schedulers;
 public class RetrofitRxJavaActivity extends BaseActivity {
 
 
+    private Context context = RetrofitRxJavaActivity.this;
     private ImageView imageView;
 
     @Override
@@ -56,7 +58,7 @@ public class RetrofitRxJavaActivity extends BaseActivity {
         Map<String, String> params = new HashMap<>();
         params.put("tokenId", "ce301015-303b-432c-9fbe-ff12167d01c1");
 
-        HttpClientUtil.getInstance().sendHttpRequset("get", "GetRecentnewRecord", params, new ProgressSubscriber(this) {
+        HttpClientUtil.getInstance(context).sendHttpRequset("get", "GetRecentnewRecord", params, new ProgressSubscriber(this) {
             @Override
             protected void _onNext(Object o) {
                 System.out.println("请求成功======>" + o.toString());
